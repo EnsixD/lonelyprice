@@ -1,0 +1,38 @@
+{
+  "node": {
+    "44bde0b5d104cdf152b3b8bc862507782a9cced3": {
+      "workers": {
+        "app/admin/orders/page": "(action-browser)/./node_modules/.pnpm/next@14.2.35_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fensi%2FProjects%2Flonely-price%2Flonely-price%2Fapp%2Fadmin%2Forders%2Factions.ts%22%2C%5B%22deleteOrder%22%2C%22updatePaymentStatus%22%2C%22updateOrderStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/admin/orders/page": "action-browser"
+      }
+    },
+    "a46ab48380e8c2cf90327cb95d7e0a2c1c3581ef": {
+      "workers": {
+        "app/admin/orders/page": "(action-browser)/./node_modules/.pnpm/next@14.2.35_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fensi%2FProjects%2Flonely-price%2Flonely-price%2Fapp%2Fadmin%2Forders%2Factions.ts%22%2C%5B%22deleteOrder%22%2C%22updatePaymentStatus%22%2C%22updateOrderStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/admin/orders/page": "action-browser"
+      }
+    },
+    "a5870bccd89f47af74f58c7b946b44bc8e859c2a": {
+      "workers": {
+        "app/admin/orders/page": "(action-browser)/./node_modules/.pnpm/next@14.2.35_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fensi%2FProjects%2Flonely-price%2Flonely-price%2Fapp%2Fadmin%2Forders%2Factions.ts%22%2C%5B%22deleteOrder%22%2C%22updatePaymentStatus%22%2C%22updateOrderStatus%22%5D%5D%5D&__client_imported__=true!"
+      },
+      "layer": {
+        "app/admin/orders/page": "action-browser"
+      }
+    },
+    "e78d4e386ae8f1328f6069e3e0089a9de4ccddb2": {
+      "workers": {
+        "app/services/page": "(rsc)/./node_modules/.pnpm/next@14.2.35_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fensi%2FProjects%2Flonely-price%2Flonely-price%2Fapp%2Fservices%2Fpage.tsx%22%2C%5B%22%24%24ACTION_0%22%5D%5D%5D&__client_imported__=!"
+      },
+      "layer": {
+        "app/services/page": "rsc"
+      }
+    }
+  },
+  "edge": {},
+  "encryptionKey": "QwvlvnykCYGKhS4l88Co/SNbSQd8wc5x+/Z1JDzSPfc="
+}
