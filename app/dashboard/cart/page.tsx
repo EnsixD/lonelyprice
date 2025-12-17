@@ -12,10 +12,44 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, ArrowLeft, Zap } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Zap, Percent, Tag } from "lucide-react";
 import { AnimatedBackground } from "@/components/animated-background";
 import { MobileNav } from "@/components/mobile-nav";
 import CartClient from "./CartClient";
+
+// Функция для проверки активной скидки
+function isDiscountActive(discountEndDate?: string): boolean {
+  if (!discountEndDate) return false;
+  try {
+    const now = new Date();
+    const endDate = new Date(discountEndDate);
+    return endDate > now;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Функция для извлечения числовой цены
+function extractPriceValue(price: string | number): number {
+  if (typeof price === "number") return price;
+
+  const match = price.match(/(\d+(?:[.,]\d+)?)/);
+  if (match) {
+    const priceStr = match[1].replace(",", ".");
+    const numericPrice = parseFloat(priceStr);
+    return !isNaN(numericPrice) ? numericPrice : 0;
+  }
+
+  return 0;
+}
+
+// Функция для расчета цены со скидкой
+function calculateDiscountedPrice(
+  price: number,
+  discountPercent: number
+): number {
+  return Math.round(price * (1 - discountPercent / 100));
+}
 
 export default async function CartPage() {
   const supabase = await createClient();
@@ -28,6 +62,7 @@ export default async function CartPage() {
     redirect("/auth/login");
   }
 
+  // Получаем корзину с услугами
   const { data: cartItems } = await supabase
     .from("cart_items")
     .select("*, services(*)")
@@ -45,11 +80,63 @@ export default async function CartPage() {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id);
 
-  const totalAmount =
-    cartItems?.reduce(
-      (sum, item) => sum + (item.services?.price || 0) * item.quantity,
-      0
-    ) || 0;
+  // Обрабатываем корзину для отображения информации о скидках
+  const processedCartItems =
+    cartItems?.map((item) => {
+      const servicePrice = item.services?.price;
+      const discountPercent = item.services?.discount_percent || 0;
+      const discountEndDate = item.services?.discount_end_date;
+
+      const originalPrice = extractPriceValue(servicePrice || 0);
+      const hasActiveDiscount =
+        discountPercent > 0 && isDiscountActive(discountEndDate);
+
+      // Если есть активная скидка, рассчитываем цену со скидкой
+      let finalPrice = originalPrice;
+      if (hasActiveDiscount) {
+        finalPrice = calculateDiscountedPrice(originalPrice, discountPercent);
+      }
+
+      // Создаем объект с информацией о скидке
+      const discountInfo =
+        discountPercent > 0
+          ? {
+              original_price: originalPrice,
+              discount_percent: discountPercent,
+              discounted_price: hasActiveDiscount ? finalPrice : originalPrice,
+              has_discount: discountPercent > 0,
+              is_active_discount: hasActiveDiscount,
+              discount_end_date: discountEndDate,
+            }
+          : undefined;
+
+      return {
+        ...item,
+        price_at_time: finalPrice,
+        discount_info: discountInfo,
+      };
+    }) || [];
+
+  // Правильно рассчитываем начальную сумму с учетом скидок
+  const initialTotalAmount = processedCartItems.reduce((sum, item) => {
+    const itemPrice =
+      item.discount_info?.discounted_price ||
+      extractPriceValue(item.services?.price || 0);
+    return sum + itemPrice * item.quantity;
+  }, 0);
+
+  // Считаем общую экономию от скидок
+  const totalSavings = processedCartItems.reduce((total, item) => {
+    if (
+      item.discount_info?.has_discount &&
+      item.discount_info?.is_active_discount
+    ) {
+      const originalPrice = item.discount_info.original_price || 0;
+      const discountedPrice = item.discount_info.discounted_price || 0;
+      return total + (originalPrice - discountedPrice) * item.quantity;
+    }
+    return total;
+  }, 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
@@ -126,17 +213,25 @@ export default async function CartPage() {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
               Корзина
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {cartItems?.length || 0} товаров на сумму{" "}
-              {totalAmount.toLocaleString("ru-RU")} ₽
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-muted-foreground">
+                {processedCartItems.length} товаров на сумму{" "}
+                {initialTotalAmount.toLocaleString("ru-RU")} ₽
+              </p>
+              {totalSavings > 0 && (
+                <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs">
+                  <Percent className="w-3 h-3 mr-1" />
+                  Экономия {totalSavings.toLocaleString("ru-RU")} ₽
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Client Component */}
         <CartClient
-          initialCartItems={cartItems || []}
-          initialTotalAmount={totalAmount}
+          initialCartItems={processedCartItems}
+          initialTotalAmount={initialTotalAmount}
         />
       </div>
 

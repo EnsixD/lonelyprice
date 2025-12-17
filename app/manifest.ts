@@ -1,0 +1,20 @@
+import { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Lonely PRICE",
+    short_name: "Lonely PRICE",
+    description: "Профессиональные услуги маркетинга и рекламы",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#000000",
+    theme_color: "#000000",
+    icons: [
+      {
+        src: "/logo.png",
+        sizes: "any",
+        type: "image/png",
+      },
+    ],
+  };
+}

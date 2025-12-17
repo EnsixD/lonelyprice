@@ -530,9 +530,7 @@ export default function OrderChat({
             </Button>
           </div>
           <div className="text-xs text-gray-500 mt-2 flex justify-between">
-            <span className="hidden sm:inline">
-              Макс. 5 файлов, 10MB каждый
-            </span>
+            <span className="hidden sm:inline">Макс. 5 файлов, 2MB каждый</span>
             <span className="sm:hidden">Макс. 5 файлов</span>
             {connectionStatus === "disconnected" && (
               <span className="text-red-500 text-xs">Нет соединения</span>

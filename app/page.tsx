@@ -16,6 +16,8 @@ import { AnimatedBackground } from "@/components/animated-background";
 import { OnlineCounter } from "@/components/online-counter";
 import { Footer } from "@/components/footer";
 import { MobileNav } from "@/components/mobile-nav";
+import { AdBanner } from "@/components/ad-banner"; // ← Импорт баннера
+import { TelegramChannels } from "@/components/telegram-channels";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -37,14 +39,15 @@ export default async function Page() {
                 href="/"
                 className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
                   <Image
                     src={myImage}
                     alt="Lonely Price"
-                    width={500}
-                    height={300}
+                    width={32}
+                    height={32}
                     priority
-                    className="rounded-[50%]"
+                    className="rounded-[50%] object-cover w-full h-full"
+                    sizes="(max-width: 640px) 32px, 40px"
                   />
                 </div>
                 <span className="text-base sm:text-xl font-bold">
@@ -113,14 +116,16 @@ export default async function Page() {
                   className="cursor-pointer"
                 >
                   <Link href="/dashboard/profile">
-                    <Image
-                      src={myImage}
-                      alt="Lonely Price"
-                      width={500}
-                      height={300}
-                      priority
-                      className="rounded-[50%]"
-                    />
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                      <Image
+                        src={myImage}
+                        alt="Профиль"
+                        width={32}
+                        height={32}
+                        className="object-cover w-full h-full"
+                        sizes="32px"
+                      />
+                    </div>
                   </Link>
                 </Button>
               ) : (
@@ -211,7 +216,13 @@ export default async function Page() {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 animate-fade-in relative z-10 flex-1">
+        {/* Рекламный баннер - добавлен здесь */}
+        <div className="px-4 mb-8 sm:mb-12">
+          <AdBanner />
+        </div>
+
         <div className="mb-8 sm:mb-12 text-center px-4">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-balance">
             Что мы предлагаем
@@ -268,6 +279,13 @@ export default async function Page() {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
+        </div>
+      </div>
+
+      {/* Новый раздел с Telegram-каналами */}
+      <div className="bg-gradient-to-b from-background to-primary/5 border-y border-border backdrop-blur-sm relative z-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <TelegramChannels />
         </div>
       </div>
 

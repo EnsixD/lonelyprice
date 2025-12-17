@@ -1,22 +1,7 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/cart/get/route": "app/api/cart/get/route.js",
-  "/api/cart/add/route": "app/api/cart/add/route.js",
-  "/api/cart/remove/route": "app/api/cart/remove/route.js",
-  "/api/cart/update/route": "app/api/cart/update/route.js",
-  "/api/orders/create/route": "app/api/orders/create/route.js",
-  "/auth/login/page": "app/auth/login/page.js",
-  "/auth/register/page": "app/auth/register/page.js",
-  "/auth/success/page": "app/auth/success/page.js",
-  "/dashboard/cart/page": "app/dashboard/cart/page.js",
-  "/dashboard/orders/page": "app/dashboard/orders/page.js",
   "/dashboard/profile/page": "app/dashboard/profile/page.js",
   "/page": "app/page.js",
   "/services/page": "app/services/page.js",
-  "/terms/page": "app/terms/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/orders/page": "app/admin/orders/page.js",
-  "/admin/services/page": "app/admin/services/page.js",
-  "/admin/users/page": "app/admin/users/page.js",
-  "/orders/[id]/page": "app/orders/[id]/page.js"
+  "/dashboard/cart/page": "app/dashboard/cart/page.js",
+  "/admin/page": "app/admin/page.js"
 }

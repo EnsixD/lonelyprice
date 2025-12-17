@@ -1,64 +1,111 @@
 import { createClient } from "@/lib/supabase/server";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+export async function POST(request: Request) {
+  console.log("API: /api/cart/add called");
 
-  // Получаем текущего пользователя
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
 
-  if (!user) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
+    // Проверяем авторизацию
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  // Получаем service_id из query params
-  const serviceId = request.nextUrl.searchParams.get("service_id");
+    console.log("User:", user?.id);
 
-  if (!serviceId) {
+    if (!user) {
+      console.log("User not authenticated");
+      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { serviceId } = body;
+
+    console.log("Service ID:", serviceId);
+
+    if (!serviceId) {
+      return NextResponse.json(
+        { error: "ID услуги не указан" },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем, есть ли уже этот товар в корзине
+    const { data: existingItem } = await supabase
+      .from("cart_items")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("service_id", serviceId)
+      .single();
+
+    console.log("Existing item:", existingItem);
+
+    let result;
+
+    if (existingItem) {
+      // Обновляем существующий товар
+      const { data, error } = await supabase
+        .from("cart_items")
+        .update({
+          quantity: existingItem.quantity + 1,
+        })
+        .eq("id", existingItem.id)
+        .select()
+        .single();
+
+      console.log("Update result:", { data, error });
+
+      if (error) {
+        console.error("Ошибка обновления корзины:", error);
+        return NextResponse.json(
+          { error: "Ошибка обновления корзины" },
+          { status: 500 }
+        );
+      }
+      result = data;
+    } else {
+      // Добавляем новый товар
+      const { data, error } = await supabase
+        .from("cart_items")
+        .insert({
+          user_id: user.id,
+          service_id: serviceId,
+          quantity: 1,
+        })
+        .select()
+        .single();
+
+      console.log("Insert result:", { data, error });
+
+      if (error) {
+        console.error("Ошибка добавления в корзину:", error);
+        return NextResponse.json(
+          { error: "Ошибка добавления в корзину" },
+          { status: 500 }
+        );
+      }
+      result = data;
+    }
+
+    // Получаем обновленное количество товаров в корзине
+    const { count: cartCount } = await supabase
+      .from("cart_items")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    console.log("New cart count:", cartCount);
+
+    return NextResponse.json({
+      success: true,
+      message: "Товар добавлен в корзину",
+      cartCount: cartCount || 0,
+    });
+  } catch (error) {
+    console.error("Неожиданная ошибка:", error);
     return NextResponse.json(
-      { error: "Service ID is required" },
-      { status: 400 }
+      { error: "Внутренняя ошибка сервера" },
+      { status: 500 }
     );
   }
-
-  // Проверяем, есть ли уже этот товар в корзине
-  const { data: existing, error: existingError } = await supabase
-    .from("cart_items")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("service_id", serviceId)
-    .single();
-
-  if (existingError && existingError.code !== "PGRST116") {
-    // PGRST116 = no rows found, это нормально
-    return NextResponse.json({ error: existingError.message }, { status: 500 });
-  }
-
-  if (existing) {
-    // Если есть, увеличиваем количество
-    const { error } = await supabase
-      .from("cart_items")
-      .update({ quantity: existing.quantity + 1 })
-      .eq("id", existing.id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-  } else {
-    // Если нет, добавляем новый товар
-    const { error } = await supabase.from("cart_items").insert({
-      user_id: user.id,
-      service_id: serviceId,
-      quantity: 1,
-    });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-  }
-
-  // Редирект на страницу корзины
-  return NextResponse.redirect(new URL("/dashboard/cart", request.url));
 }

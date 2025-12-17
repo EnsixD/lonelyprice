@@ -30,8 +30,25 @@ import {
   FileText,
   Upload,
   Settings,
+  Mail,
+  Shield,
+  CreditCard,
+  History,
+  HelpCircle,
+  Bell,
+  Globe,
+  Key,
+  UserCircle,
+  CheckCircle,
+  AlertCircle,
+  BarChart3,
+  Calendar,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -44,8 +61,10 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cartCount, setCartCount] = useState(0);
+  const [ordersCount, setOrdersCount] = useState(0);
 
   useEffect(() => {
     loadProfile();
@@ -76,12 +95,21 @@ export default function ProfilePage() {
       setAvatarUrl(profile.avatar_url || "");
     }
 
-    const { count } = await supabase
+    // Получаем количество товаров в корзине
+    const { count: cartCount } = await supabase
       .from("cart_items")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id);
 
-    setCartCount(count || 0);
+    setCartCount(cartCount || 0);
+
+    // Получаем количество заказов
+    const { count: ordersCount } = await supabase
+      .from("orders")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    setOrdersCount(ordersCount || 0);
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,14 +272,15 @@ export default function ProfilePage() {
                 href="/"
                 className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
                   <Image
                     src={myImage}
                     alt="Lonely Price"
-                    width={500}
-                    height={300}
+                    width={32}
+                    height={32}
                     priority
-                    className="rounded-[50%]"
+                    className="rounded-[50%] object-cover w-full h-full"
+                    sizes="(max-width: 640px) 32px, 40px"
                   />
                 </div>
                 <span className="text-base sm:text-lg font-bold">
@@ -265,10 +294,10 @@ export default function ProfilePage() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="transition-colors cursor-pointer"
+                className="transition-colors cursor-pointer h-9 px-3"
               >
                 <Link href="/services">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  <Zap className="w-4 h-4 mr-2" />
                   Услуги
                 </Link>
               </Button>
@@ -276,7 +305,7 @@ export default function ProfilePage() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="transition-colors cursor-pointer"
+                className="transition-colors cursor-pointer h-9 px-3"
               >
                 <Link href="/dashboard/cart">
                   <ShoppingCart className="w-4 h-4 mr-2" />
@@ -287,18 +316,18 @@ export default function ProfilePage() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="transition-colors cursor-pointer"
+                className="transition-colors cursor-pointer h-9 px-3"
               >
                 <Link href="/dashboard/orders">
                   <Package className="w-4 h-4 mr-2" />
-                  Заказы
+                  Заказы {ordersCount > 0 ? `(${ordersCount})` : ""}
                 </Link>
               </Button>
               <Button
                 asChild
                 variant="ghost"
                 size="sm"
-                className="transition-colors cursor-pointer"
+                className="transition-colors cursor-pointer h-9 px-3"
               >
                 <Link href="/terms">
                   <FileText className="w-4 h-4 mr-2" />
@@ -310,7 +339,7 @@ export default function ProfilePage() {
                   asChild
                   variant="secondary"
                   size="sm"
-                  className="cursor-pointer"
+                  className="cursor-pointer h-9 px-3"
                 >
                   <Link href="/admin">
                     <Settings className="w-4 h-4 mr-2" />
@@ -322,7 +351,7 @@ export default function ProfilePage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="cursor-pointer"
+                className="cursor-pointer h-9 px-3"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Выйти
@@ -335,7 +364,7 @@ export default function ProfilePage() {
                   asChild
                   variant="secondary"
                   size="sm"
-                  className="cursor-pointer p-2"
+                  className="cursor-pointer p-2 h-9 w-9"
                 >
                   <Link href="/admin">
                     <Settings className="w-4 h-4" />
@@ -347,12 +376,12 @@ export default function ProfilePage() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="cursor-pointer p-2"
+                className="cursor-pointer p-2 h-9 w-9"
               >
                 <Link href="/dashboard/cart">
                   <ShoppingCart className="w-4 h-4" />
                   {cartCount > 0 && (
-                    <span className="ml-1 text-xs font-medium">
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {cartCount}
                     </span>
                   )}
@@ -366,36 +395,238 @@ export default function ProfilePage() {
       {/* Main Content */}
       <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8 lg:py-12">
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">Мой профиль</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground/60 bg-clip-text text-transparent">
+            Личный кабинет
+          </h1>
           <p className="text-muted-foreground mt-2">
-            Управление вашей учетной записью
+            Управление вашей учетной записью и настройками
           </p>
         </div>
 
-        <div className="grid gap-6">
-          {/* Profile Info Card */}
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <User className="w-5 h-5 sm:w-6 sm:h-6" />
-                Информация профиля
-              </CardTitle>
-              <CardDescription>Обновите ваше имя и аватар</CardDescription>
-            </CardHeader>
-            <form onSubmit={updateProfile}>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Stats Only */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Stats Card - Улучшенный дизайн */}
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Статистика
+                </CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                  <div className="flex flex-col items-center sm:items-start gap-4">
-                    <Avatar className="w-24 h-24 sm:w-28 sm:h-28 border-2 border-border/50">
-                      <AvatarImage
-                        src={avatarUrl || "/placeholder.svg"}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="text-2xl bg-primary/10">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                {/* Статистика в кругах */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative flex flex-col items-center">
+                    <div className="relative w-20 h-20">
+                      <svg className="w-full h-full" viewBox="0 0 100 100">
+                        <circle
+                          className="text-muted stroke-current"
+                          strokeWidth="8"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                        />
+                        <circle
+                          className="text-primary stroke-current"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                          strokeDasharray={`${(cartCount / 10) * 251.2} 251.2`}
+                          strokeDashoffset="0"
+                          transform="rotate(-90 50 50)"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold">{cartCount}</span>
+                      </div>
+                    </div>
+                    <span className="text-sm text-muted-foreground mt-2">
+                      В корзине
+                    </span>
+                  </div>
+
+                  <div className="relative flex flex-col items-center">
+                    <div className="relative w-20 h-20">
+                      <svg className="w-full h-full" viewBox="0 0 100 100">
+                        <circle
+                          className="text-muted stroke-current"
+                          strokeWidth="8"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                        />
+                        <circle
+                          className="text-primary stroke-current"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                          strokeDasharray={`${
+                            (ordersCount / 10) * 251.2
+                          } 251.2`}
+                          strokeDashoffset="0"
+                          transform="rotate(-90 50 50)"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold">
+                          {ordersCount}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-sm text-muted-foreground mt-2">
+                      Заказов
+                    </span>
+                  </div>
+                </div>
+
+                <Separator className="bg-border/50" />
+
+                {/* Информация об аккаунте */}
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Shield className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Статус аккаунта</p>
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200 mt-1"
+                          >
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Активен
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Calendar className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            Дата регистрации
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(user.created_at).toLocaleDateString(
+                              "ru-RU"
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Информация о роли */}
+                  {profile?.is_admin && (
+                    <div className="p-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium">
+                          Роль: Администратор
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Полный доступ ко всем функциям системы
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Info Card */}
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <UserCircle className="w-5 h-5 text-primary" />
+                  Информация
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">Email:</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground break-all pl-6">
+                    {user.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 pl-6">
+                    Email не может быть изменен
+                  </p>
+                </div>
+
+                <Separator className="bg-border/50" />
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">Имя:</span>
+                  </div>
+                  <p className="text-sm font-medium pl-6">
+                    {fullName || "Не указано"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Forms */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Info Card */}
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <UserCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  Редактировать профиль
+                </CardTitle>
+                <CardDescription>
+                  Обновите ваше имя и аватар профиля
+                </CardDescription>
+              </CardHeader>
+              <form onSubmit={updateProfile}>
+                <CardContent className="space-y-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div className="flex flex-col items-center sm:items-start gap-4">
+                      <div className="relative group">
+                        <Avatar className="w-24 h-24 sm:w-28 sm:h-28 border-2 border-primary/20 shadow-lg group-hover:border-primary/40 transition-colors">
+                          <AvatarImage
+                            src={avatarUrl || "/placeholder.svg"}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-primary/10">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="secondary"
+                          className="absolute -bottom-2 -right-2 rounded-full cursor-pointer shadow-md hover:shadow-lg transition-shadow"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4" />
+                        </Button>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-full transition-opacity flex items-center justify-center">
+                          <span className="text-xs text-white font-medium">
+                            Изменить
+                          </span>
+                        </div>
+                      </div>
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -403,107 +634,202 @@ export default function ProfilePage() {
                         onChange={handleAvatarUpload}
                         className="hidden"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="cursor-pointer text-sm"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Изменить фото
-                      </Button>
                       {avatarFile && (
-                        <div className="text-xs text-muted-foreground flex items-center">
-                          {avatarFile.name}
+                        <div className="text-xs text-primary flex items-center gap-2">
+                          <CheckCircle className="w-3 h-3" />
+                          {avatarFile.name} (готово к сохранению)
                         </div>
                       )}
                     </div>
+
+                    <div className="flex-1 w-full space-y-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="fullName"
+                          className="flex items-center gap-2 text-sm font-medium"
+                        >
+                          <User className="w-4 h-4" />
+                          Полное имя
+                        </Label>
+                        <Input
+                          id="fullName"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="Введите ваше имя"
+                          className="cursor-text h-11"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Это имя будет отображаться в вашем профиле
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="email"
+                          className="flex items-center gap-2 text-sm font-medium"
+                        >
+                          <Mail className="w-4 h-4" />
+                          Email
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="email"
+                            value={user.email}
+                            disabled
+                            className="bg-muted/50 cursor-not-allowed h-11 pr-10"
+                          />
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <Lock className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Email не может быть изменен
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="border-t border-border/50 pt-6">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="cursor-pointer w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary hover:to-primary/80 shadow-md hover:shadow-lg transition-all duration-200 h-11 px-6"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Сохранить изменения
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+
+            {/* Password Change Card */}
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Key className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  Безопасность аккаунта
+                </CardTitle>
+                <CardDescription>
+                  Измените пароль для защиты вашего аккаунта
+                </CardDescription>
+              </CardHeader>
+              <form onSubmit={updatePassword}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="newPassword"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
+                      <Lock className="w-4 h-4" />
+                      Новый пароль
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={showPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Введите новый пароль"
+                        className="cursor-text h-11 pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-7 w-7 cursor-pointer"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <AlertCircle className="w-3 h-3" />
+                      Минимум 6 символов
+                    </div>
                   </div>
 
-                  <div className="flex-1 w-full space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Полное имя</Label>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="confirmPassword"
+                      className="flex items-center gap-2 text-sm font-medium"
+                    >
+                      <Lock className="w-4 h-4" />
+                      Подтвердите пароль
+                    </Label>
+                    <div className="relative">
                       <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Введите ваше имя"
-                        className="cursor-text"
+                        id="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Повторите новый пароль"
+                        className="cursor-text h-11 pr-10"
                       />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-7 w-7 cursor-pointer"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        value={user.email}
-                        disabled
-                        className="bg-muted/50 cursor-not-allowed"
-                      />
-                    </div>
+                    {newPassword &&
+                      confirmPassword &&
+                      newPassword !== confirmPassword && (
+                        <p className="text-xs text-red-500 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Пароли не совпадают
+                        </p>
+                      )}
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter className="border-t pt-6">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="cursor-pointer w-full sm:w-auto"
-                >
-                  {isLoading ? "Сохранение..." : "Сохранить изменения"}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-
-          {/* Password Change Card */}
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <Lock className="w-5 h-5 sm:w-6 sm:h-6" />
-                Изменить пароль
-              </CardTitle>
-              <CardDescription>
-                Обновите ваш пароль для безопасности
-              </CardDescription>
-            </CardHeader>
-            <form onSubmit={updatePassword}>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Новый пароль</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Минимум 6 символов"
-                    className="cursor-text"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Повторите новый пароль"
-                    className="cursor-text"
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="border-t pt-6">
-                <Button
-                  type="submit"
-                  disabled={isLoading || !newPassword || !confirmPassword}
-                  className="cursor-pointer w-full sm:w-auto"
-                >
-                  {isLoading ? "Изменение..." : "Изменить пароль"}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
+                </CardContent>
+                <CardFooter className="border-t border-border/50 pt-6">
+                  <Button
+                    type="submit"
+                    disabled={
+                      isLoading ||
+                      !newPassword ||
+                      !confirmPassword ||
+                      newPassword !== confirmPassword
+                    }
+                    className="cursor-pointer w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary hover:to-primary/80 shadow-md hover:shadow-lg transition-all duration-200 h-11 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Изменение...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4 mr-2" />
+                        Обновить пароль
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </div>
         </div>
       </div>
 
@@ -525,7 +851,7 @@ export default function ProfilePage() {
               <span className="text-sm font-medium">Lonely PRICE</span>
             </div>
             <div className="text-xs text-muted-foreground text-center sm:text-right">
-              © {new Date().getFullYear()} Все права защищены
+              © {new Date().getFullYear()} Админ-панель. Все права защищены.
             </div>
           </div>
         </div>

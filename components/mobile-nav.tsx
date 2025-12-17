@@ -1,89 +1,157 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Menu, Home, ShoppingCart, FileText, User, LogIn, UserPlus, Zap } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Menu,
+  Home,
+  ShoppingCart,
+  User,
+  Settings,
+  LogOut,
+  FileText,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface MobileNavProps {
-  user: any
-  cartCount?: number
+  user: any;
+  cartCount: number;
+  isAdmin: boolean;
 }
 
-export function MobileNav({ user, cartCount }: MobileNavProps) {
-  const [open, setOpen] = useState(false)
+export function MobileNav({ user, cartCount, isAdmin }: MobileNavProps) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Вы вышли из системы");
+    router.push("/auth/login");
+    router.refresh();
+  };
+
+  // Создаем кнопку без передачи ref
+  const MenuButton = () => (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="cursor-pointer md:hidden"
+      onClick={() => setOpen(true)}
+    >
+      <Menu className="w-5 h-5" />
+    </Button>
+  );
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="md:hidden cursor-pointer">
-          <Menu className="w-5 h-5" />
-          <span className="sr-only">Открыть меню</span>
-        </Button>
+        <MenuButton />
       </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] sm:w-[350px]" modal={true}>
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary" />
-            </div>
-            Lonely PRICE
-          </SheetTitle>
-        </SheetHeader>
-        <nav className="flex flex-col gap-3 mt-8">
-          <Button asChild variant="ghost" className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
-            <Link href="/">
-              <Home className="w-5 h-5 mr-3" />
-              Главная
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
-            <Link href="/services">
-              <ShoppingCart className="w-5 h-5 mr-3" />
-              Каталог услуг
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
-            <Link href="/terms">
-              <FileText className="w-5 h-5 mr-3" />
-              Условия и соглашения
-            </Link>
-          </Button>
-          {user && (
-            <>
-              <Button asChild variant="ghost" className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
+      <SheetContent side="left" className="w-64 sm:w-80">
+        <div className="flex flex-col h-full">
+          <div className="flex-1 py-6">
+            <nav className="grid gap-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start cursor-pointer"
+                onClick={() => {
+                  router.push("/");
+                  setOpen(false);
+                }}
+                asChild
+              >
+                <Link href="/">
+                  <Home className="w-4 h-4 mr-3" />
+                  Главная
+                </Link>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start cursor-pointer"
+                onClick={() => {
+                  router.push("/terms");
+                  setOpen(false);
+                }}
+                asChild
+              >
+                <Link href="/terms">
+                  <FileText className="w-4 h-4 mr-3" />
+                  Условия
+                </Link>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start cursor-pointer"
+                onClick={() => {
+                  router.push("/dashboard/cart");
+                  setOpen(false);
+                }}
+                asChild
+              >
                 <Link href="/dashboard/cart">
-                  <ShoppingCart className="w-5 h-5 mr-3" />
-                  Корзина {cartCount ? `(${cartCount})` : ""}
+                  <ShoppingCart className="w-4 h-4 mr-3" />
+                  Корзина
+                  {cartCount > 0 && (
+                    <span className="ml-auto bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
                 </Link>
               </Button>
-              <Button asChild variant="ghost" className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start cursor-pointer"
+                onClick={() => {
+                  router.push("/dashboard/profile");
+                  setOpen(false);
+                }}
+                asChild
+              >
                 <Link href="/dashboard/profile">
-                  <User className="w-5 h-5 mr-3" />
-                  Мой профиль
+                  <User className="w-4 h-4 mr-3" />
+                  Профиль
                 </Link>
               </Button>
-            </>
-          )}
-          {!user && (
-            <>
-              <Button asChild variant="ghost" className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
-                <Link href="/auth/login">
-                  <LogIn className="w-5 h-5 mr-3" />
-                  Войти
-                </Link>
-              </Button>
-              <Button asChild className="justify-start cursor-pointer" onClick={() => setOpen(false)}>
-                <Link href="/auth/register">
-                  <UserPlus className="w-5 h-5 mr-3" />
-                  Регистрация
-                </Link>
-              </Button>
-            </>
-          )}
-        </nav>
+
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start cursor-pointer"
+                  onClick={() => {
+                    router.push("/admin");
+                    setOpen(false);
+                  }}
+                  asChild
+                >
+                  <Link href="/admin">
+                    <Settings className="w-4 h-4 mr-3" />
+                    Админ-панель
+                  </Link>
+                </Button>
+              )}
+            </nav>
+          </div>
+
+          <div className="border-t pt-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-destructive hover:text-destructive cursor-pointer"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-3" />
+              Выйти
+            </Button>
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

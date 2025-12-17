@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,143 +17,262 @@ import { MobileNav } from "@/components/mobile-nav";
 import {
   FileText,
   ArrowLeft,
-  Megaphone,
-  MessageSquare,
-  Star,
-  Zap,
-  Shield,
-  Radio,
-  Target,
   ShoppingCart,
+  Loader2,
+  Megaphone,
+  Shield,
+  Sparkles,
+  Crown,
+  Radio,
   TrendingUp,
-  Users,
+  Camera,
+  Music,
+  Gamepad2,
+  BookOpen,
+  BarChart3,
+  Headphones,
+  Code,
+  Lock,
+  Target,
+  Palette,
+  Video as VideoIcon,
+  MessageCircle,
+  Award,
+  Wallet,
+  Lightning,
 } from "lucide-react";
 import { AnimatedBackground } from "@/components/animated-background";
-import { redirect } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
+// Иконки для категорий
 const categoryIcons: Record<string, any> = {
   "Реклама и продвижение": Megaphone,
-  "Управление и модерация": MessageSquare,
-  "Подписки и пакеты": Star,
-  "Дополнительные услуги": Zap,
+  "Управление и модерация": Shield,
+  "Подписки и пакеты": Crown,
+  "Дополнительные услуги": Sparkles,
+  "Рейд и активности": Radio,
+  "SMM и менеджмент": TrendingUp,
+  "Пиар и брендинг": Sparkles,
+  "Дизайн и медиа": Camera,
+  "Музыка и творчество": Music,
+  "Игры и развлечения": Gamepad2,
+  "Обучение и консалтинг": BookOpen,
+  "Аналитика и отчеты": BarChart3,
+  "Техническая поддержка": Headphones,
+  Разработка: Code,
+  Безопасность: Lock,
 };
 
-const serviceImages: Record<string, string> = {
-  Пиар: "radial-gradient(circle at top left, oklch(0.55 0.15 200 / 0.2), transparent 50%), radial-gradient(circle at bottom right, oklch(0.65 0.2 180 / 0.2), transparent 50%)",
-  Реклама:
-    "radial-gradient(circle at top right, oklch(0.6 0.18 190 / 0.2), transparent 50%), radial-gradient(circle at bottom left, oklch(0.55 0.15 210 / 0.2), transparent 50%)",
-  Модерация:
-    "radial-gradient(circle at center, oklch(0.5 0.2 170 / 0.2), transparent 60%)",
-  SMM: "radial-gradient(circle at top, oklch(0.65 0.2 180 / 0.2), transparent 50%), radial-gradient(circle at bottom, oklch(0.55 0.15 200 / 0.2), transparent 50%)",
+// Функция для обработки ссылок в тексте
+const parseDescriptionLinks = (text: string) => {
+  if (!text) return text;
+
+  // Регулярное выражение для поиска URL
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  // Разделяем текст по ссылкам
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part.length > 30 ? `${part.substring(0, 30)}...` : part}
+        </a>
+      );
+    }
+    return part;
+  });
 };
 
-function getServiceIcon(title: string) {
-  if (
-    title.toLowerCase().includes("пиар") ||
-    title.toLowerCase().includes("реклама")
-  ) {
-    return Megaphone;
-  }
-  if (title.toLowerCase().includes("модер")) {
-    return Shield;
-  }
-  if (
-    title.toLowerCase().includes("карт-бланш") ||
-    title.toLowerCase().includes("экономический")
-  ) {
-    return Star;
-  }
-  if (
-    title.toLowerCase().includes("smm") ||
-    title.toLowerCase().includes("менеджер")
-  ) {
-    return TrendingUp;
-  }
-  if (title.toLowerCase().includes("рейд")) {
-    return Radio;
-  }
-  if (title.toLowerCase().includes("посредник")) {
-    return Users;
-  }
-  return Target;
-}
+export default function ServicesPage() {
+  const [services, setServices] = useState<any[]>([]);
+  const [servicesByCategory, setServicesByCategory] = useState<
+    Record<string, any[]>
+  >({});
+  const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pendingServiceId, setPendingServiceId] = useState<string | null>(null);
 
-function getServiceGradient(title: string) {
-  for (const [key, gradient] of Object.entries(serviceImages)) {
-    if (title.toLowerCase().includes(key.toLowerCase())) {
-      return gradient;
-    }
-  }
-  return serviceImages["Пиар"];
-}
+  const router = useRouter();
+  const supabase = createClient();
 
-export default async function Page() {
-  const supabase = await createClient();
+  // Загрузка данных
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  async function loadData() {
+    try {
+      setIsLoading(true);
 
-  if (!user) {
-    redirect("/auth/login");
-  }
+      // Получаем текущего пользователя
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
 
-  const { data: services } = await supabase
-    .from("services")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at");
+      if (!authUser) {
+        router.push("/auth/login");
+        return;
+      }
 
-  const { count: cartCount } = await supabase
-    .from("cart_items")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
+      setUser(authUser);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .single();
+      // Получаем услуги
+      const { data: servicesData } = await supabase
+        .from("services")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at");
 
-  const servicesByCategory = services?.reduce((acc, service) => {
-    if (!acc[service.category]) {
-      acc[service.category] = [];
-    }
-    acc[service.category].push(service);
-    return acc;
-  }, {} as Record<string, typeof services>);
+      setServices(servicesData || []);
 
-  const addToCart = async (serviceId: string) => {
-    "use server";
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      // Группировка услуг по категориям
+      const grouped = (servicesData || []).reduce((acc, service) => {
+        if (!acc[service.category]) {
+          acc[service.category] = [];
+        }
+        acc[service.category].push(service);
+        return acc;
+      }, {} as Record<string, any[]>);
 
-    if (!user) return;
+      setServicesByCategory(grouped);
 
-    const { data: existing } = await supabase
-      .from("cart_items")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("service_id", serviceId)
-      .single();
-
-    if (existing) {
-      await supabase
+      // Получаем количество товаров в корзине
+      const { count: cartCountData } = await supabase
         .from("cart_items")
-        .update({ quantity: existing.quantity + 1 })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("cart_items").insert({
-        user_id: user.id,
-        service_id: serviceId,
-        quantity: 1,
-      });
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", authUser.id);
+
+      setCartCount(cartCountData || 0);
+
+      // Проверяем, является ли пользователь администратором
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", authUser.id)
+        .single();
+
+      setIsAdmin(profile?.is_admin || false);
+    } catch (error) {
+      console.error("Error loading page data:", error);
+      toast.error("Ошибка загрузки данных");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Простая функция добавления в корзину
+  async function handleAddToCart(serviceId: string) {
+    if (!user) {
+      toast.error("Вы не авторизованы");
+      router.push("/auth/login");
+      return;
     }
 
-    redirect("/services");
-  };
+    try {
+      setPendingServiceId(serviceId);
+
+      console.log("Adding to cart:", serviceId);
+
+      const response = await fetch("/api/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serviceId }),
+      });
+
+      const result = await response.json();
+      console.log("API response:", result);
+
+      if (response.ok && result.success) {
+        setCartCount(result.cartCount || 0);
+        toast.success("Товар добавлен в корзину!");
+      } else {
+        toast.error(result.error || "Ошибка при добавлении в корзину");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Ошибка при добавлении в корзину");
+    } finally {
+      setPendingServiceId(null);
+    }
+  }
+
+  // Функция форматирования цены
+  function formatPrice(price: any) {
+    if (typeof price === "number") {
+      return price.toLocaleString("ru-RU") + " ₽";
+    }
+    return price + " ₽";
+  }
+
+  // Функция получения иконки для услуги
+  function getServiceIcon(serviceTitle: string, description: string) {
+    const titleLower = serviceTitle.toLowerCase();
+    const descLower = description.toLowerCase();
+
+    if (titleLower.includes("пиар") || descLower.includes("пиар"))
+      return Megaphone;
+    if (titleLower.includes("реклам") || descLower.includes("реклам"))
+      return Target;
+    if (titleLower.includes("модер") || descLower.includes("модер"))
+      return Shield;
+    if (titleLower.includes("smm") || descLower.includes("smm"))
+      return TrendingUp;
+    if (titleLower.includes("рейд") || descLower.includes("рейд")) return Radio;
+    if (titleLower.includes("подписк") || descLower.includes("подписк"))
+      return Crown;
+    if (titleLower.includes("дизайн") || descLower.includes("дизайн"))
+      return Palette;
+    if (titleLower.includes("видео") || descLower.includes("видео"))
+      return VideoIcon;
+    if (titleLower.includes("музык") || descLower.includes("музык"))
+      return Music;
+    if (titleLower.includes("игр") || descLower.includes("игр"))
+      return Gamepad2;
+    if (titleLower.includes("обучен") || descLower.includes("обучен"))
+      return BookOpen;
+    if (titleLower.includes("аналит") || descLower.includes("аналит"))
+      return BarChart3;
+    if (titleLower.includes("чат") || descLower.includes("чат"))
+      return MessageCircle;
+    if (titleLower.includes("технич") || descLower.includes("технич"))
+      return Headphones;
+    if (titleLower.includes("разработ") || descLower.includes("разработ"))
+      return Code;
+    if (titleLower.includes("безопасн") || descLower.includes("безопасн"))
+      return Lock;
+    if (titleLower.includes("быстр") || descLower.includes("быстр"))
+      return Lightning;
+    if (titleLower.includes("качеств") || descLower.includes("качеств"))
+      return Award;
+    if (titleLower.includes("эконом") || descLower.includes("эконом"))
+      return Wallet;
+
+    return Sparkles;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-muted-foreground">Загрузка услуг...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
@@ -165,20 +286,21 @@ export default async function Page() {
               <MobileNav
                 user={user}
                 cartCount={cartCount || 0}
-                isAdmin={profile?.is_admin || false}
+                isAdmin={isAdmin}
               />
               <Link
                 href="/"
                 className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
                   <Image
                     src={myImage}
                     alt="Lonely Price"
-                    width={500}
-                    height={300}
+                    width={32}
+                    height={32}
                     priority
-                    className="rounded-[50%]"
+                    className="rounded-[50%] object-cover w-full h-full"
+                    sizes="(max-width: 640px) 32px, 40px"
                   />
                 </div>
                 <span className="text-base sm:text-lg font-bold">
@@ -258,34 +380,37 @@ export default async function Page() {
           </p>
         </div>
 
-        {servicesByCategory ? (
+        {Object.keys(servicesByCategory).length > 0 ? (
           Object.entries(servicesByCategory).map(
             ([category, categoryServices]) => {
-              const CategoryIcon = categoryIcons[category] || Target;
+              const CategoryIcon = categoryIcons[category] || Sparkles;
+
               return (
                 <div key={category} className="mb-8 sm:mb-10 lg:mb-12">
-                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <CategoryIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <CategoryIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
-                    <span className="text-balance">{category}</span>
-                  </h2>
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold">
+                      {category}
+                    </h2>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {categoryServices.map((service) => {
-                      const ServiceIcon = getServiceIcon(service.title);
-                      const gradient = getServiceGradient(service.title);
+                      const isPending = pendingServiceId === service.id;
+                      const ServiceIcon = getServiceIcon(
+                        service.title,
+                        service.description
+                      );
 
                       return (
                         <Card
                           key={service.id}
-                          className="flex flex-col overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-lg h-full"
+                          className="flex flex-col overflow-hidden hover:border-primary/50 transition-all duration-200 hover:shadow-lg h-full"
                         >
-                          <div
-                            className="h-40 sm:h-48 relative flex items-center justify-center border-b border-border/50"
-                            style={{ background: gradient }}
-                          >
-                            <div className="absolute inset-0 bg-card/20 backdrop-blur-[2px]" />
-                            <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-card/80 backdrop-blur-sm border border-primary/20 flex items-center justify-center transition-transform duration-300 hover:scale-105">
+                          <div className="h-40 sm:h-48 relative flex items-center justify-center border-b border-border/50 bg-gradient-to-br from-primary/10 to-primary/5">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-card/80 border border-primary/20 flex items-center justify-center">
                               <ServiceIcon className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                             </div>
                           </div>
@@ -296,41 +421,48 @@ export default async function Page() {
                                 <CardTitle className="text-base sm:text-lg lg:text-xl text-balance leading-snug">
                                   {service.title}
                                 </CardTitle>
-                                {service.price > 0 ? (
+                                <div className="flex flex-col items-end gap-1 whitespace-nowrap flex-shrink-0">
                                   <Badge
                                     variant="secondary"
-                                    className="font-bold whitespace-nowrap flex-shrink-0 text-xs sm:text-sm px-2 py-1"
+                                    className="font-bold text-xs sm:text-sm px-2 py-1"
                                   >
-                                    {service.price.toLocaleString("ru-RU")} ₽
+                                    {formatPrice(service.price)}
                                   </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="outline"
-                                    className="whitespace-nowrap flex-shrink-0 text-xs px-2 py-1"
-                                  >
-                                    Индивидуально
-                                  </Badge>
-                                )}
+                                  {service.discount_percent > 0 && (
+                                    <Badge
+                                      variant="destructive"
+                                      className="text-xs px-2 py-0.5"
+                                    >
+                                      -{service.discount_percent}%
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                               <CardDescription className="text-balance leading-relaxed text-sm sm:text-base line-clamp-3">
-                                {service.description}
+                                {/* Используем функцию для парсинга ссылок */}
+                                {parseDescriptionLinks(service.description)}
                               </CardDescription>
                             </CardHeader>
 
                             <CardFooter className="p-0 pt-4 mt-auto border-t border-border/20">
-                              <form
-                                action={addToCart.bind(null, service.id)}
-                                className="w-full"
+                              <Button
+                                onClick={() => handleAddToCart(service.id)}
+                                className="w-full cursor-pointer text-sm sm:text-base"
+                                size="default"
+                                disabled={isPending}
                               >
-                                <Button
-                                  type="submit"
-                                  className="w-full cursor-pointer text-sm sm:text-base"
-                                  size="default"
-                                >
-                                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                                  В корзину
-                                </Button>
-                              </form>
+                                {isPending ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                                    Добавляем...
+                                  </>
+                                ) : (
+                                  <>
+                                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                                    В корзину
+                                  </>
+                                )}
+                              </Button>
                             </CardFooter>
                           </div>
                         </Card>
@@ -354,7 +486,7 @@ export default async function Page() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-border/40 mt-12 py-6">
+      <div className="border-t border-border/40 py-6 mt-96">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -371,7 +503,7 @@ export default async function Page() {
               <span className="text-sm font-medium">Lonely PRICE</span>
             </div>
             <div className="text-xs text-muted-foreground text-center sm:text-right">
-              © {new Date().getFullYear()} Все права защищены
+              © {new Date().getFullYear()} Админ-панель. Все права защищены.
             </div>
           </div>
         </div>
