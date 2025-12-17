@@ -1,4 +1,4 @@
-// File: /home/ensi/Projects/lonely-price/lonely-price/app/admin/orders/page.tsx
+// File: /home/ensi/Projects/lonlyprice/app/admin/orders/page.tsx
 import * as entry from '../../../../../app/admin/orders/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

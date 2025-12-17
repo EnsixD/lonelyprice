@@ -1,4 +1,4 @@
-// File: /home/ensi/Projects/lonely-price/lonely-price/app/page.tsx
+// File: /home/ensi/Projects/lonlyprice/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
