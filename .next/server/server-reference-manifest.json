@@ -1,14 +1,5 @@
 {
-  "node": {
-    "34744149d3f8333b79cbb8823c740a852196b4a7": {
-      "workers": {
-        "app/services/page": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Fensi%2FProjects%2Flonlyprice%2Fcomponents%2Fanimated-background.tsx%22%2C%5B%22default%22%5D%5D%5D&__client_imported__=true!"
-      },
-      "layer": {
-        "app/services/page": "action-browser"
-      }
-    }
-  },
+  "node": {},
   "edge": {},
-  "encryptionKey": "DxLugVXqPibWNVyhIrnH4tAAU3K8ZwG/t/fnOe8OZok="
+  "encryptionKey": "iwPXtHwUaH9ePS5SEuMMwlwGQ4iLLDxlqyt2mWEGY08="
 }
