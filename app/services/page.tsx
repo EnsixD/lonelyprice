@@ -40,11 +40,12 @@ import {
   Award,
   Wallet,
   Lightning,
+  LogIn,
 } from "lucide-react";
-import { AnimatedBackground } from "@/components/animated-background";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import AnimatedBackground from "@/components/animated-background";
 
 // Иконки для категорий
 const categoryIcons: Record<string, any> = {
@@ -117,19 +118,14 @@ export default function ServicesPage() {
     try {
       setIsLoading(true);
 
-      // Получаем текущего пользователя
+      // Получаем текущего пользователя (необязательно)
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser();
 
-      if (!authUser) {
-        router.push("/auth/login");
-        return;
-      }
-
       setUser(authUser);
 
-      // Получаем услуги
+      // Получаем услуги (всегда доступно, даже без авторизации)
       const { data: servicesData } = await supabase
         .from("services")
         .select("*")
@@ -149,22 +145,27 @@ export default function ServicesPage() {
 
       setServicesByCategory(grouped);
 
-      // Получаем количество товаров в корзине
-      const { count: cartCountData } = await supabase
-        .from("cart_items")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", authUser.id);
+      // Получаем количество товаров в корзине (только если пользователь авторизован)
+      if (authUser) {
+        const { count: cartCountData } = await supabase
+          .from("cart_items")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", authUser.id);
 
-      setCartCount(cartCountData || 0);
+        setCartCount(cartCountData || 0);
 
-      // Проверяем, является ли пользователь администратором
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", authUser.id)
-        .single();
+        // Проверяем, является ли пользователь администратором
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", authUser.id)
+          .single();
 
-      setIsAdmin(profile?.is_admin || false);
+        setIsAdmin(profile?.is_admin || false);
+      } else {
+        setCartCount(0);
+        setIsAdmin(false);
+      }
     } catch (error) {
       console.error("Error loading page data:", error);
       toast.error("Ошибка загрузки данных");
@@ -173,10 +174,10 @@ export default function ServicesPage() {
     }
   }
 
-  // Простая функция добавления в корзину
+  // Функция добавления в корзину
   async function handleAddToCart(serviceId: string) {
     if (!user) {
-      toast.error("Вы не авторизованы");
+      toast.error("Для добавления в корзину необходимо войти в аккаунт");
       router.push("/auth/login");
       return;
     }
@@ -332,38 +333,71 @@ export default function ServicesPage() {
                   Условия
                 </Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="transition-colors cursor-pointer bg-transparent"
-              >
-                <Link href="/dashboard/cart">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Корзина {cartCount ? `(${cartCount})` : ""}
-                </Link>
-              </Button>
-              <Button asChild size="sm" className="cursor-pointer">
-                <Link href="/dashboard/profile">Профиль</Link>
-              </Button>
+              {user ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="transition-colors cursor-pointer bg-transparent"
+                >
+                  <Link href="/dashboard/cart">
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Корзина {cartCount ? `(${cartCount})` : ""}
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="transition-colors cursor-pointer bg-transparent"
+                >
+                  <Link href="/auth/login">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Войти
+                  </Link>
+                </Button>
+              )}
+              {user ? (
+                <Button asChild size="sm" className="cursor-pointer">
+                  <Link href="/dashboard/profile">Профиль</Link>
+                </Button>
+              ) : (
+                <Button asChild size="sm" className="cursor-pointer">
+                  <Link href="/auth/register">Регистрация</Link>
+                </Button>
+              )}
             </div>
 
             <div className="flex md:hidden items-center gap-2">
-              <Button
-                asChild
-                size="sm"
-                variant="ghost"
-                className="cursor-pointer p-2"
-              >
-                <Link href="/dashboard/cart">
-                  <ShoppingCart className="w-4 h-4" />
-                  {cartCount ? (
-                    <span className="ml-1 text-xs font-medium">
-                      {cartCount}
-                    </span>
-                  ) : null}
-                </Link>
-              </Button>
+              {user ? (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="cursor-pointer p-2"
+                >
+                  <Link href="/dashboard/cart">
+                    <ShoppingCart className="w-4 h-4" />
+                    {cartCount ? (
+                      <span className="ml-1 text-xs font-medium">
+                        {cartCount}
+                      </span>
+                    ) : null}
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="cursor-pointer p-2"
+                >
+                  <Link href="/auth/login">
+                    <LogIn className="w-4 h-4" />
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -378,6 +412,13 @@ export default function ServicesPage() {
           <p className="mt-2 sm:mt-3 text-sm sm:text-base lg:text-lg text-muted-foreground text-balance">
             Профессиональные услуги для продвижения и развития вашего проекта
           </p>
+          {!user && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20">
+              <span className="text-xs text-primary font-medium">
+                Для оформления заказа требуется регистрация
+              </span>
+            </div>
+          )}
         </div>
 
         {Object.keys(servicesByCategory).length > 0 ? (
@@ -456,10 +497,15 @@ export default function ServicesPage() {
                                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                                     Добавляем...
                                   </>
-                                ) : (
+                                ) : user ? (
                                   <>
                                     <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                                     В корзину
+                                  </>
+                                ) : (
+                                  <>
+                                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                                    Войти для покупки
                                   </>
                                 )}
                               </Button>
@@ -481,6 +527,34 @@ export default function ServicesPage() {
             <p className="text-muted-foreground">
               Услуги временно недоступны. Попробуйте позже.
             </p>
+          </div>
+        )}
+
+        {/* Призыв к регистрации для неавторизованных */}
+        {!user && (
+          <div className="mt-12 text-center">
+            <div className="inline-flex flex-col items-center gap-4 p-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 backdrop-blur-sm">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">
+                  Готовы оформить заказ?
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-md">
+                  Зарегистрируйтесь или войдите в аккаунт, чтобы добавить услуги
+                  в корзину и оформить заказ
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button asChild className="cursor-pointer">
+                  <Link href="/auth/register">Создать аккаунт</Link>
+                </Button>
+                <Button asChild variant="outline" className="cursor-pointer">
+                  <Link href="/auth/login">Войти в аккаунт</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

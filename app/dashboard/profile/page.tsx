@@ -18,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AnimatedBackground } from "@/components/animated-background";
 import { MobileNav } from "@/components/mobile-nav";
 import {
   User,
@@ -49,6 +48,7 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import AnimatedBackground from "@/components/animated-background";
 
 export default function ProfilePage() {
   const router = useRouter();

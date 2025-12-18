@@ -24,22 +24,15 @@ const paymentMethods = [
     id: "phone",
     name: "По номеру телефона",
     icon: <Smartphone className="w-5 h-5" />,
-    details: "+79527985736",
-    description: "Перевод на номер телефона (ВТБ)",
+    details: "+79268797828",
+    description: "Перевод по номеру телефона (Т-Банк)",
   },
   {
     id: "card",
     name: "По номеру карты",
     icon: <CreditCard className="w-5 h-5" />,
-    details: "2200 7000 1234 5678",
-    description: "Карта ВТБ (Юлия А.)",
-  },
-  {
-    id: "bank",
-    name: "Банковский перевод",
-    icon: <Building className="w-5 h-5" />,
-    details: "ВТБ (ПАО)",
-    description: "БИК 044525187, к/с 30101810700000000187",
+    details: "2200 7008 7224 8934",
+    description: "Карта Т-Банк",
   },
 ];
 

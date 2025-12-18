@@ -12,12 +12,12 @@ import {
   ShoppingCart,
   ArrowRight,
 } from "lucide-react";
-import { AnimatedBackground } from "@/components/animated-background";
 import { OnlineCounter } from "@/components/online-counter";
 import { Footer } from "@/components/footer";
 import { MobileNav } from "@/components/mobile-nav";
 import { AdBanner } from "@/components/ad-banner"; // ← Импорт баннера
 import { TelegramChannels } from "@/components/telegram-channels";
+import AnimatedBackground from "@/components/animated-background";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -34,7 +34,7 @@ export default async function Page() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <MobileNav user={user} />
+              <MobileNav user={user} cartCount={0} isAdmin={false} />
               <Link
                 href="/"
                 className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"

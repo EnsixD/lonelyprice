@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, ArrowLeft, Zap, Percent, Tag } from "lucide-react";
-import { AnimatedBackground } from "@/components/animated-background";
 import { MobileNav } from "@/components/mobile-nav";
 import CartClient from "./CartClient";
 
@@ -140,8 +139,6 @@ export default async function CartPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
-      <AnimatedBackground />
-
       {/* Header */}
       <div className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-50 supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3">

@@ -16,8 +16,9 @@ const telegramChannels = [
     color: "from-amber-500 to-amber-600",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/20",
-    subscribers: "7.9K+",
+    subscribers: "8К+",
     features: ["Новости", "розыгрыши", "Анонсы"],
+    avatar: "/telegram-avatars/lonely.jpg", // Путь к файлу в public
   },
   {
     name: "Phantomic",
@@ -29,38 +30,48 @@ const telegramChannels = [
     borderColor: "border-emerald-500/20",
     subscribers: "7K+",
     features: ["Аналитика", "Стратегии", "Инсайды"],
+    avatar: "/telegram-avatars/phantomic.jpg", // Путь к файлу в public
   },
 ];
 
+// Функция для получения fallback цвета
+function getFallbackColor(username: string) {
+  const colors = {
+    lonely: "bg-gradient-to-br from-amber-500/20 to-amber-600/20",
+    phantomic: "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20",
+  };
+
+  if (username.includes("lonely")) return colors.lonely;
+  if (username.includes("phantomic")) return colors.phantomic;
+  return "bg-gradient-to-br from-gray-500/20 to-gray-600/20";
+}
+
 // Компонент для аватара
 function TelegramAvatar({
+  avatar,
   username,
   channelName,
 }: {
+  avatar: string;
   username: string;
   channelName: string;
 }) {
   const [avatarError, setAvatarError] = useState(false);
-  const avatarUrl = `/api/telegram-avatar?username=${username}`;
   const fallbackChar = username.charAt(0).toUpperCase();
-  const isLonely = username.includes("lonely");
-
-  const fallbackBg = isLonely
-    ? "bg-gradient-to-br from-amber-500/20 to-amber-600/20"
-    : "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20";
+  const fallbackBg = getFallbackColor(username);
 
   return (
     <div className="relative">
       <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-white/10 to-transparent backdrop-blur-sm border border-border/50">
         {!avatarError ? (
           <Image
-            src={avatarUrl}
-            alt={`Аватар ${channelName}`}
+            src={avatar}
+            alt={`Аватар канала ${channelName}`}
             fill
             className="object-cover"
             sizes="56px"
-            unoptimized
             onError={() => setAvatarError(true)}
+            priority={false}
           />
         ) : (
           <div
@@ -116,6 +127,7 @@ export function TelegramChannels() {
                 {/* Заголовок и аватар */}
                 <div className="flex items-start gap-4">
                   <TelegramAvatar
+                    avatar={channel.avatar}
                     username={channel.username}
                     channelName={channel.name}
                   />
