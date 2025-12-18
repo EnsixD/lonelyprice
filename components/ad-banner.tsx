@@ -63,13 +63,7 @@ export function AdBanner() {
                   target="_blank"
                   rel="nofollow noopener noreferrer"
                   href="https://dkfrh.com/g/800vlob2z4046dfda6eb9ebcee8c5e/?i=4&erid=2bL9aMPo2e49hMef4pgUXbXvDx"
-                >
-                  <img
-                    src="https://aflink.ru/b/800vlob2z4046dfda6eb9ebcee8c5e/"
-                    alt="Tasty Coffee"
-                    className="h-6 w-auto object-contain"
-                  />
-                </a>
+                ></a>
               </Button>
             </div>
           </div>
