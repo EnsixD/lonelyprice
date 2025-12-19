@@ -3,10 +3,10 @@ import Image from "next/image";
 import { ArrowLeft, FileText, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AnimatedBackground } from "@/components/animated-background";
 import { MobileNav } from "@/components/mobile-nav";
 import myImage from "@/public/logo.png";
 import { createClient } from "@/lib/supabase/server";
+import AnimatedBackground from "@/components/animated-background";
 
 type TermsSection = {
   id: string;

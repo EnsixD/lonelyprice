@@ -12,6 +12,16 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "cdn4.telesco.pe",
+      },
+
+      {
+        protocol: "https",
+        hostname: "cdn.admitad-connect.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "**supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
@@ -28,9 +38,7 @@ const nextConfig = {
     ],
   },
   swcMinify: true,
-  experimental: {
-    serverActions: true,
-  },
+
   // Оптимизация для загрузки изображений
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

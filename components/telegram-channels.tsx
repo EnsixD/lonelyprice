@@ -18,7 +18,8 @@ const telegramChannels = [
     borderColor: "border-amber-500/20",
     subscribers: "8К+",
     features: ["Новости", "розыгрыши", "Анонсы"],
-    avatar: "/telegram-avatars/lonely.jpg", // Путь к файлу в public
+    avatar:
+      "https://cdn4.telesco.pe/file/OkJNAMEKOYx7PPHzjkDvc9VzqF1Zd5JA378EjaWlzA8Biei-5wLxHRlhYK_GJLtVmBq1YYO9z_ZNYOuNWDAcBIYlNbAQ7WcjF6WzWlRles4M41OBftnHqTLdSEcbH2PUXcxENB6bcGLjKckAwgr9r3wqNE3Zm3936_ZdjpPZMyUqQ1IeiSETrt_mbeCmHEly2Xole8FFRGJRR4zkh4zAb9CXDK-SCjNKAf8OYJWXg1oPl9R-J3lzZfvuGawD02GghcopYaqX2Xoq5d4ZH_QaKXxKJWv4N31fu1NZBv-l9QMINc5qJMuGXRVoU9hRPgy-h_-QmbHKiOWucT3ymRpUNg.jpg", // Путь к файлу в public
   },
   {
     name: "Phantomic",
@@ -30,7 +31,8 @@ const telegramChannels = [
     borderColor: "border-emerald-500/20",
     subscribers: "7K+",
     features: ["Аналитика", "Стратегии", "Инсайды"],
-    avatar: "/telegram-avatars/phantomic.jpg", // Путь к файлу в public
+    avatar:
+      "https://cdn4.telesco.pe/file/ZrjL4fw8NR9rgJ5j0C29EF0TgC40SZoeODMv23JCj_Pr0hKdIAIx4Ovugap_h6jTw0Vy10EacgbZmru_4DqplycW5M_QwbHIVzMVRxv6mNPPIgU0cLOowIeHbtf4t5qNbMeBHZChsxKjAntBY518lMehtkJQmmQqdwVEDRhPXJzjZ9nR-hnF0Ms1cEhggEcVPTO_d-0Tod6kUZ-VrnkMcx-xy6LJ829R_9jF9uMoy8FeBJaHOT8GWKhUq5fzQkffFV03DP9e7tnWWl6feOqHeBdeDswwYbusgXnqQOIuvlQVqq6lHX9DutQ_Sa6ZxwKy9q9CJ_4FWku60uBr-F_V-A.jpg", // Путь к файлу в public
   },
 ];
 
@@ -62,13 +64,13 @@ function TelegramAvatar({
 
   return (
     <div className="relative">
-      <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-white/10 to-transparent backdrop-blur-sm border border-border/50">
+      <div className="relative w-14 h-14 rounded-[50%] overflow-hidden bg-gradient-to-br from-white/10 to-transparent backdrop-blur-sm border border-border/50">
         {!avatarError ? (
           <Image
             src={avatar}
             alt={`Аватар канала ${channelName}`}
             fill
-            className="object-cover"
+            className="object-cover rounded-[50%]"
             sizes="56px"
             onError={() => setAvatarError(true)}
             priority={false}
